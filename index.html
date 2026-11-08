@@ -43,6 +43,69 @@
       <button class="paper-btn active" id="btn-toggle-bots" title="Toggle AI Opponents">BOTS: ON</button>
       <button class="paper-btn active" id="btn-toggle-audio" title="Toggle Sound">AUDIO: ON</button>
     </div>
+
+    <!-- Mobile Compact Bar (Shown only on small screens) -->
+    <div id="mobile-top-bar">
+      <div class="paper-pill" id="mobile-room-pill">
+        <span style="color: var(--ink-margin); font-weight: 700;">●</span>
+        <span>ROOM: <span id="mobile-room-code-display">SOLO</span></span>
+      </div>
+      <button class="paper-btn" id="btn-mobile-menu" aria-label="Open Navigation Menu">
+        <span>☰</span> <span style="font-size: 11px; margin-left: 3px; font-weight: 700;">MENU</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Slide-out Navigation Drawer -->
+  <div id="mobile-drawer-overlay"></div>
+  <div id="mobile-nav-drawer">
+    <div class="mobile-drawer-header">
+      <div class="modal-title">🏎️ INK DRIFT // MENU</div>
+      <button class="modal-close-btn" id="btn-close-mobile-menu">✕</button>
+    </div>
+    
+    <div class="mobile-drawer-body">
+      <!-- Circuit Selection -->
+      <div class="setting-section">
+        <div class="setting-section-title">SELECT CIRCUIT</div>
+        <select id="mobile-select-track" class="paper-select" style="width: 100%;">
+          <option value="0">01 // GRAND PRIX</option>
+          <option value="1">02 // OVAL SPEEDWAY</option>
+          <option value="2">03 // ALPINE PASS</option>
+          <option value="3">04 // INFINITY 8</option>
+          <option value="4">05 // TOKYO BAY</option>
+        </select>
+      </div>
+
+      <!-- Car & Theme Settings -->
+      <div class="setting-section">
+        <div class="setting-section-title">RACING & CUSTOMIZATION</div>
+        <div class="mobile-btn-grid">
+          <button class="paper-btn active" id="btn-mobile-difficulty">DIFF: EASY</button>
+          <button class="paper-btn" id="btn-mobile-theme">☀️ DAY</button>
+          <button class="paper-btn" id="btn-mobile-garage">🏎️ GARAGE</button>
+          <button class="paper-btn" id="btn-mobile-settings">⚙️ SETTINGS</button>
+        </div>
+      </div>
+
+      <!-- Real-Time Multiplayer -->
+      <div class="setting-section">
+        <div class="setting-section-title">REAL-TIME MULTIPLAYER</div>
+        <div class="mobile-btn-grid">
+          <button class="paper-btn active" id="btn-mobile-join-mp">JOIN MULTIPLAYER</button>
+          <button class="paper-btn" id="btn-mobile-copy-invite">COPY INVITE</button>
+        </div>
+      </div>
+
+      <!-- Gameplay & Sound Toggles -->
+      <div class="setting-section">
+        <div class="setting-section-title">GAMEPLAY TOGGLES</div>
+        <div class="mobile-btn-grid">
+          <button class="paper-btn active" id="btn-mobile-bots">BOTS: ON</button>
+          <button class="paper-btn active" id="btn-mobile-audio">AUDIO: ON</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Translucent Corner Minimap HUD -->
@@ -52,6 +115,21 @@
       <span class="minimap-tag">LIVE GPS</span>
     </div>
     <canvas id="minimap-canvas" width="140" height="140"></canvas>
+  </div>
+
+  <!-- Mobile Minimalist Corner Telemetry (Text-Only, No Bulky Boxes) -->
+  <div id="mobile-corner-hud">
+    <div class="mob-hud-pos" id="mob-hud-pos">P1 <span class="mob-hud-total">/ 4</span></div>
+    <div class="mob-hud-line">
+      <span class="mob-hud-tag">LAP</span>
+      <span class="mob-hud-val" id="mob-hud-lap">1/3</span>
+      <span class="mob-hud-time" id="mob-hud-time">00:00.0</span>
+    </div>
+    <div class="mob-hud-line">
+      <span class="mob-hud-speed" id="mob-hud-speed">0 <span class="mob-hud-unit">KM/H</span></span>
+      <span class="mob-hud-gear" id="mob-hud-gear">G1</span>
+    </div>
+    <div class="mob-hud-drift" id="mob-hud-drift">GRIP: MAX</div>
   </div>
 
   <!-- Blueprint Left Margin Stamp -->

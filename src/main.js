@@ -202,6 +202,12 @@ class GameApp {
     const config = setTrack(trackIndex);
     settings.set('selectedTrack', trackIndex);
 
+    // Sync desktop & mobile track selectors
+    const selDesktop = document.getElementById('select-track');
+    const selMobile = document.getElementById('mobile-select-track');
+    if (selDesktop) selDesktop.value = String(trackIndex);
+    if (selMobile) selMobile.value = String(trackIndex);
+
     // Update minimap track shape & name
     if (this.minimap) {
       this.minimap.setTrack(trackCurve, config.name);
@@ -260,8 +266,13 @@ class GameApp {
     });
 
     const btnTheme = document.getElementById('btn-toggle-theme');
+    const btnMobTheme = document.getElementById('btn-mobile-theme');
+    const themeLabel = theme.isDark ? '🌙 NIGHT' : '☀️ DAY';
     if (btnTheme) {
-      btnTheme.innerText = theme.isDark ? '🌙 NIGHT' : '☀️ DAY';
+      btnTheme.innerText = themeLabel;
+    }
+    if (btnMobTheme) {
+      btnMobTheme.innerText = themeLabel;
     }
   }
 
@@ -314,16 +325,19 @@ class GameApp {
   initUI() {
     // Top Bar Difficulty Toggle Button
     const btnDifficulty = document.getElementById('btn-toggle-difficulty');
+    const btnMobDifficulty = document.getElementById('btn-mobile-difficulty');
     this.updateDifficultyUI = () => {
       const diff = settings.get('difficulty') || 'easy';
-      if (btnDifficulty) {
-        btnDifficulty.innerText = `DIFF: ${diff.toUpperCase()}`;
+      const label = `DIFF: ${diff.toUpperCase()}`;
+      [btnDifficulty, btnMobDifficulty].forEach(btn => {
+        if (!btn) return;
+        btn.innerText = label;
         if (diff === 'easy') {
-          btnDifficulty.classList.add('active');
+          btn.classList.add('active');
         } else {
-          btnDifficulty.classList.remove('active');
+          btn.classList.remove('active');
         }
-      }
+      });
       if (this.localPhysics) {
         const carConfig = settings.get('car') || { bodyStyle: 0 };
         this.localPhysics.applyBodyStyle(carConfig.bodyStyle || 0);
@@ -331,67 +345,83 @@ class GameApp {
     };
     this.updateDifficultyUI();
 
-    if (btnDifficulty) {
-      btnDifficulty.addEventListener('click', () => {
-        const current = settings.get('difficulty') || 'easy';
-        const next = current === 'easy' ? 'medium' : current === 'medium' ? 'hard' : 'easy';
-        settings.set('difficulty', next);
-        this.updateDifficultyUI();
-        this.showToast(`DRIVING DIFFICULTY: ${next.toUpperCase()}`);
-      });
-    }
+    const handleDifficultyToggle = () => {
+      const current = settings.get('difficulty') || 'easy';
+      const next = current === 'easy' ? 'medium' : current === 'medium' ? 'hard' : 'easy';
+      settings.set('difficulty', next);
+      this.updateDifficultyUI();
+      this.showToast(`DRIVING DIFFICULTY: ${next.toUpperCase()}`);
+    };
+    if (btnDifficulty) btnDifficulty.addEventListener('click', handleDifficultyToggle);
+    if (btnMobDifficulty) btnMobDifficulty.addEventListener('click', handleDifficultyToggle);
 
-    // Top Bar Track Selector
+    // Top Bar Track Selector (Desktop & Mobile)
     const trackSelect = document.getElementById('select-track');
+    const mobileTrackSelect = document.getElementById('mobile-select-track');
+    const handleTrackChange = (e) => {
+      const idx = parseInt(e.target.value, 10);
+      this.switchTrack(idx);
+    };
     if (trackSelect) {
       trackSelect.value = String(settings.get('selectedTrack') || 0);
-      trackSelect.addEventListener('change', (e) => {
-        const idx = parseInt(e.target.value, 10);
-        this.switchTrack(idx);
+      trackSelect.addEventListener('change', handleTrackChange);
+    }
+    if (mobileTrackSelect) {
+      mobileTrackSelect.value = String(settings.get('selectedTrack') || 0);
+      mobileTrackSelect.addEventListener('change', (e) => {
+        handleTrackChange(e);
+        closeMobileDrawer();
       });
     }
 
-    // Top Bar Theme Toggle
+    // Top Bar Theme Toggle (Desktop & Mobile)
     const btnTheme = document.getElementById('btn-toggle-theme');
-    if (btnTheme) {
-      btnTheme.addEventListener('click', () => {
-        this.toggleTheme();
-      });
-    }
+    const btnMobTheme = document.getElementById('btn-mobile-theme');
+    if (btnTheme) btnTheme.addEventListener('click', () => this.toggleTheme());
+    if (btnMobTheme) btnMobTheme.addEventListener('click', () => this.toggleTheme());
 
-    // Top Bar Garage Button
+    // Top Bar Garage Button (Desktop & Mobile)
     const btnGarage = document.getElementById('btn-open-garage');
-    if (btnGarage) {
-      btnGarage.addEventListener('click', () => {
-        this.garageModal.show();
-      });
-    }
+    const btnMobGarage = document.getElementById('btn-mobile-garage');
+    if (btnGarage) btnGarage.addEventListener('click', () => this.garageModal.show());
+    if (btnMobGarage) btnMobGarage.addEventListener('click', () => {
+      closeMobileDrawer();
+      this.garageModal.show();
+    });
 
-    // Top Bar Settings Button
+    // Top Bar Settings Button (Desktop & Mobile)
     const btnSettings = document.getElementById('btn-open-settings');
-    if (btnSettings) {
-      btnSettings.addEventListener('click', () => {
-        this.settingsModal.show();
-      });
-    }
+    const btnMobSettings = document.getElementById('btn-mobile-settings');
+    if (btnSettings) btnSettings.addEventListener('click', () => this.settingsModal.show());
+    if (btnMobSettings) btnMobSettings.addEventListener('click', () => {
+      closeMobileDrawer();
+      this.settingsModal.show();
+    });
 
     // Audio Unlock & Toggle
     const btnAudio = document.getElementById('btn-toggle-audio');
+    const btnMobAudio = document.getElementById('btn-mobile-audio');
     const updateAudioLabel = () => {
-      btnAudio.innerText = `AUDIO: ${soundSystem.isMuted ? 'OFF' : 'ON'}`;
-      if (soundSystem.isMuted) {
-        btnAudio.classList.remove('active');
-      } else {
-        btnAudio.classList.add('active');
-      }
+      const label = `AUDIO: ${soundSystem.isMuted ? 'OFF' : 'ON'}`;
+      [btnAudio, btnMobAudio].forEach(btn => {
+        if (!btn) return;
+        btn.innerText = label;
+        if (soundSystem.isMuted) {
+          btn.classList.remove('active');
+        } else {
+          btn.classList.add('active');
+        }
+      });
     };
     updateAudioLabel();
 
-    btnAudio.addEventListener('click', () => {
+    const handleAudioToggle = () => {
       soundSystem.ensureAudioRunning();
       soundSystem.toggleMute();
       updateAudioLabel();
-    });
+    };
+    if (btnAudio) btnAudio.addEventListener('click', handleAudioToggle);
+    if (btnMobAudio) btnMobAudio.addEventListener('click', handleAudioToggle);
 
     const unlockAudio = () => {
       soundSystem.ensureAudioRunning();
@@ -401,18 +431,45 @@ class GameApp {
     window.addEventListener('pointerdown', unlockAudio);
     window.addEventListener('keydown', unlockAudio);
 
-    // Bot Toggle
+    // Bot Toggle (Desktop & Mobile)
     const btnBots = document.getElementById('btn-toggle-bots');
-    btnBots.addEventListener('click', () => {
+    const btnMobBots = document.getElementById('btn-mobile-bots');
+    const handleBotsToggle = () => {
       this.botsEnabled = !this.botsEnabled;
-      btnBots.innerText = `BOTS: ${this.botsEnabled ? 'ON' : 'OFF'}`;
-      if (this.botsEnabled) {
-        btnBots.classList.add('active');
-      } else {
-        btnBots.classList.remove('active');
-      }
+      const label = `BOTS: ${this.botsEnabled ? 'ON' : 'OFF'}`;
+      [btnBots, btnMobBots].forEach(btn => {
+        if (!btn) return;
+        btn.innerText = label;
+        if (this.botsEnabled) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
       this.setupBots();
-    });
+    };
+    if (btnBots) btnBots.addEventListener('click', handleBotsToggle);
+    if (btnMobBots) btnMobBots.addEventListener('click', handleBotsToggle);
+
+    // Mobile Hamburger Menu Drawer Listeners
+    const mobileDrawer = document.getElementById('mobile-nav-drawer');
+    const mobileOverlay = document.getElementById('mobile-drawer-overlay');
+    const btnOpenMobileMenu = document.getElementById('btn-mobile-menu');
+    const btnCloseMobileMenu = document.getElementById('btn-close-mobile-menu');
+
+    const openMobileDrawer = () => {
+      if (mobileDrawer) mobileDrawer.classList.add('open');
+      if (mobileOverlay) mobileOverlay.classList.add('open');
+    };
+
+    const closeMobileDrawer = () => {
+      if (mobileDrawer) mobileDrawer.classList.remove('open');
+      if (mobileOverlay) mobileOverlay.classList.remove('open');
+    };
+
+    if (btnOpenMobileMenu) btnOpenMobileMenu.addEventListener('click', openMobileDrawer);
+    if (btnCloseMobileMenu) btnCloseMobileMenu.addEventListener('click', closeMobileDrawer);
+    if (mobileOverlay) mobileOverlay.addEventListener('click', closeMobileDrawer);
 
     // Multiplayer Modal & Connections
     const mpModal = document.getElementById('multiplayer-modal');
@@ -424,17 +481,31 @@ class GameApp {
     const btnMpJoin = document.getElementById('btn-mp-join-code');
     const btnMpCopy = document.getElementById('btn-mp-copy-link');
     const btnJoinMultiplayer = document.getElementById('btn-join-multiplayer');
+    const btnMobJoinMp = document.getElementById('btn-mobile-join-mp');
+    const btnMobCopyInvite = document.getElementById('btn-mobile-copy-invite');
     const btnInvite = document.getElementById('btn-copy-invite');
+    const mobRoomPill = document.getElementById('mobile-room-code-display');
 
     const updateMpUI = () => {
       if (this.networkManager.isConnected && this.networkManager.roomCode) {
-        btnJoinMultiplayer.innerText = `● ONLINE: ${this.networkManager.roomCode}`;
+        const text = `● ONLINE: ${this.networkManager.roomCode}`;
+        btnJoinMultiplayer.innerText = text;
         btnJoinMultiplayer.classList.add('active');
+        if (btnMobJoinMp) {
+          btnMobJoinMp.innerText = text;
+          btnMobJoinMp.classList.add('active');
+        }
+        if (mobRoomPill) mobRoomPill.textContent = this.networkManager.roomCode;
         if (mpActiveSection) mpActiveSection.style.display = 'block';
         if (mpRoomText) mpRoomText.textContent = this.networkManager.roomCode;
       } else {
         btnJoinMultiplayer.innerText = 'JOIN MULTIPLAYER';
         btnJoinMultiplayer.classList.remove('active');
+        if (btnMobJoinMp) {
+          btnMobJoinMp.innerText = 'JOIN MULTIPLAYER';
+          btnMobJoinMp.classList.remove('active');
+        }
+        if (mobRoomPill) mobRoomPill.textContent = 'SOLO';
         if (mpActiveSection) mpActiveSection.style.display = 'none';
       }
     };
@@ -517,6 +588,20 @@ class GameApp {
           updateMpUI();
         }
         copyRoomInvite(this.networkManager.roomCode);
+      });
+    }
+
+    // Mobile Drawer Multiplayer Buttons
+    if (btnMobJoinMp) {
+      btnMobJoinMp.addEventListener('click', () => {
+        closeMobileDrawer();
+        if (btnJoinMultiplayer) btnJoinMultiplayer.click();
+      });
+    }
+    if (btnMobCopyInvite) {
+      btnMobCopyInvite.addEventListener('click', () => {
+        closeMobileDrawer();
+        if (btnInvite) btnInvite.click();
       });
     }
 
@@ -855,6 +940,38 @@ class GameApp {
       } else {
         driftEl.textContent = 'GRIP: MAX';
         driftEl.style.fill = 'var(--ink-sage)';
+      }
+    }
+
+    // 11b. Update Mobile Text-Only Floating Corner Telemetry HUD
+    const mobPos = document.getElementById('mob-hud-pos');
+    if (mobPos) {
+      mobPos.innerHTML = `P${this.raceManager.position} <span class="mob-hud-total">/ ${allOpponents.length + 1}</span>`;
+    }
+    const mobLap = document.getElementById('mob-hud-lap');
+    if (mobLap) {
+      mobLap.textContent = `${Math.min(this.raceManager.currentLap, 3)}/3`;
+    }
+    const mobTime = document.getElementById('mob-hud-time');
+    if (mobTime) {
+      mobTime.textContent = this.raceManager.formatTime(this.raceManager.currentLapTime);
+    }
+    const mobSpeed = document.getElementById('mob-hud-speed');
+    if (mobSpeed) {
+      mobSpeed.innerHTML = `${speedKmh} <span class="mob-hud-unit">KM/H</span>`;
+    }
+    const mobGear = document.getElementById('mob-hud-gear');
+    if (mobGear && gearEl) {
+      mobGear.textContent = gearEl.textContent || 'G1';
+    }
+    const mobDrift = document.getElementById('mob-hud-drift');
+    if (mobDrift) {
+      if (physResult.isDrifting) {
+        mobDrift.textContent = `DRIFT ${Math.round(physResult.slipRatio * 100)}%`;
+        mobDrift.style.color = 'var(--ink-crimson)';
+      } else {
+        mobDrift.textContent = 'GRIP: MAX';
+        mobDrift.style.color = 'var(--ink-sage)';
       }
     }
 
