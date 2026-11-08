@@ -214,18 +214,244 @@ body.theme-night #minimap-hud {
   pointer-events: none;
 }
 
+/* Left Bottom Telemetry Stack */
+.hud-left-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
 .hud-panel {
   background: rgba(251, 249, 244, 0.94);
   border: 1.5px solid var(--ink-blue);
-  padding: 12px 18px;
+  padding: 10px 16px;
   box-shadow: 3px 3px 0px var(--ink-blue);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
+  min-width: 140px;
 }
 
 body.theme-night .hud-panel {
   background: rgba(15, 37, 63, 0.94);
+}
+
+/* F1 Analog Speedometer Dial Container */
+.f1-dial-container {
+  width: 155px;
+  height: 155px;
+  background: rgba(251, 249, 244, 0.94);
+  border: 2px solid var(--ink-blue);
+  border-radius: 50%;
+  box-shadow: 4px 4px 0px var(--ink-blue);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  pointer-events: none;
+  user-select: none;
+}
+
+body.theme-night .f1-dial-container {
+  background: rgba(10, 25, 47, 0.94);
+  border-color: #38BDF8;
+  box-shadow: 4px 4px 0px #0284C7;
+}
+
+.f1-dial-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.dial-casing {
+  fill: none;
+  stroke: var(--ink-blue);
+  stroke-width: 1.5;
+}
+
+.dial-track {
+  fill: none;
+  stroke: var(--ink-blue-light);
+  stroke-width: 0.8;
+  stroke-dasharray: 2 2;
+}
+
+body.theme-night .dial-casing {
+  stroke: #38BDF8;
+}
+
+body.theme-night .dial-track {
+  stroke: rgba(56, 189, 248, 0.4);
+}
+
+/* Shift LED Dots */
+.rev-led {
+  fill: rgba(16, 42, 67, 0.15);
+  stroke: var(--ink-blue);
+  stroke-width: 0.8;
+  transition: fill 0.08s ease, filter 0.08s ease;
+}
+
+body.theme-night .rev-led {
+  fill: rgba(255, 255, 255, 0.12);
+  stroke: #38BDF8;
+}
+
+.rev-led.lit-green {
+  fill: #10B981 !important;
+  filter: drop-shadow(0 0 3px #10B981);
+}
+
+.rev-led.lit-yellow {
+  fill: #F59E0B !important;
+  filter: drop-shadow(0 0 3px #F59E0B);
+}
+
+.rev-led.lit-red {
+  fill: #EF4444 !important;
+  filter: drop-shadow(0 0 4px #EF4444);
+}
+
+.rev-led.lit-purple {
+  fill: #A855F7 !important;
+  filter: drop-shadow(0 0 5px #A855F7);
+}
+
+/* Dial Ticks & Scale */
+.dial-tick {
+  stroke: var(--ink-blue);
+  stroke-width: 1.2;
+}
+
+.dial-tick.major {
+  stroke-width: 1.8;
+}
+
+.dial-tick.redline {
+  stroke: var(--ink-crimson);
+}
+
+body.theme-night .dial-tick {
+  stroke: #BAE6FD;
+}
+
+body.theme-night .dial-tick.redline {
+  stroke: #F87171;
+}
+
+.dial-tick-text {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  fill: var(--ink-blue-light);
+}
+
+.dial-tick-text.redline {
+  fill: var(--ink-crimson);
+}
+
+body.theme-night .dial-tick-text {
+  fill: #7DD3FC;
+}
+
+body.theme-night .dial-tick-text.redline {
+  fill: #F87171;
+}
+
+/* Analog Needle */
+.dial-needle {
+  fill: var(--ink-crimson);
+  stroke: var(--ink-blue);
+  stroke-width: 0.8;
+  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+body.theme-night .dial-needle {
+  fill: #F87171;
+  stroke: #E0F2FE;
+  filter: drop-shadow(0 0 4px #F87171);
+}
+
+.dial-needle-hub {
+  fill: var(--ink-blue);
+  stroke: var(--paper-bg);
+  stroke-width: 1.5;
+}
+
+.dial-needle-pin {
+  fill: var(--ink-crimson);
+}
+
+body.theme-night .dial-needle-hub {
+  fill: #0F253F;
+  stroke: #38BDF8;
+}
+
+body.theme-night .dial-needle-pin {
+  fill: #38BDF8;
+}
+
+/* Center Digital Readout */
+.dial-digital-speed {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 700;
+  fill: var(--ink-blue);
+  line-height: 1;
+}
+
+body.theme-night .dial-digital-speed {
+  fill: #E0F2FE;
+  filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.45));
+}
+
+.dial-digital-unit {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  fill: var(--ink-blue-light);
+}
+
+body.theme-night .dial-digital-unit {
+  fill: #7DD3FC;
+}
+
+/* Gear Box */
+.dial-gear-pill {
+  fill: var(--paper-bg);
+  stroke: var(--ink-blue);
+  stroke-width: 1;
+}
+
+body.theme-night .dial-gear-pill {
+  fill: #0A192F;
+  stroke: #38BDF8;
+}
+
+.dial-gear-text {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--ink-blue);
+}
+
+body.theme-night .dial-gear-text {
+  fill: #38BDF8;
+}
+
+.dial-drift-status {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  fill: var(--ink-sage);
+}
+
+body.theme-night .dial-drift-status {
+  fill: #34D399;
 }
 
 .hud-label {

@@ -250,6 +250,15 @@ class GameApp {
     this.setGroundTheme(theme);
     this.skidmarks.setTheme(theme.isDark);
 
+    if (this.localCarModel && this.localCarModel.setHeadlights) {
+      this.localCarModel.setHeadlights(theme.isDark);
+    }
+    this.aiRacers.forEach(bot => {
+      if (bot.carModel && bot.carModel.setHeadlights) {
+        bot.carModel.setHeadlights(theme.isDark);
+      }
+    });
+
     const btnTheme = document.getElementById('btn-toggle-theme');
     if (btnTheme) {
       btnTheme.innerText = theme.isDark ? '🌙 NIGHT' : '☀️ DAY';
@@ -280,7 +289,20 @@ class GameApp {
 
   applySettingsChange(data = {}) {
     const theme = settings.getTheme();
-    this.applyTheme(theme);
+    const isDark = theme.isDark;
+    if (this.currentThemeIsDark !== isDark) {
+      this.currentThemeIsDark = isDark;
+      this.applyTheme(theme);
+      if (this.trackData) {
+        this.trackData.dispose();
+      }
+      this.trackData = buildTrack(this.scene, theme);
+      this.boostPads = this.trackData.boostPads;
+      this.setupLocalPlayer();
+      this.setupBots();
+    } else {
+      this.applyTheme(theme);
+    }
     if (this.updateDifficultyUI) {
       this.updateDifficultyUI();
     }
@@ -672,17 +694,79 @@ class GameApp {
     }
 
     // 11. Update HUD Telemetry
-    document.getElementById('hud-speed').innerHTML = `${Math.round(physResult.speed * 2.2)} <span style="font-size: 14px;">KM/H</span>`;
-    document.getElementById('hud-lap').innerHTML = `${Math.min(this.raceManager.currentLap, 3)} <span style="font-size: 14px; color: var(--ink-blue-light);">/ 3</span>`;
-    document.getElementById('hud-time').innerText = this.raceManager.formatTime(this.raceManager.currentLapTime);
+    const speedKmh = Math.round(physResult.speed * 2.2);
+    const speedRatio = Math.min(Math.abs(speedKmh) / 180, 1.0);
 
+    // Update F1 Analog Speedometer needle (-135deg at 0 km/h to +135deg at 200 km/h)
+    const needleDeg = -135 + Math.min(Math.max(speedKmh, 0) / 200, 1.1) * 270;
+    const needleEl = document.getElementById('dial-needle-group');
+    if (needleEl) {
+      needleEl.style.transform = `rotate(${needleDeg}deg)`;
+    }
+
+    // Digital speed readout
+    const digitalSpeedEl = document.getElementById('dial-speed-value');
+    if (digitalSpeedEl) {
+      digitalSpeedEl.textContent = `${speedKmh}`;
+    }
+
+    const legacySpeed = document.getElementById('hud-speed');
+    if (legacySpeed) {
+      legacySpeed.innerHTML = `${speedKmh} <span style="font-size: 14px;">KM/H</span>`;
+    }
+
+    // Dynamic F1 Gear Determination
+    const gearEl = document.getElementById('dial-gear-label');
+    if (gearEl) {
+      if (physResult.speed < -0.5) {
+        gearEl.textContent = 'G R';
+      } else if (speedKmh < 24) {
+        gearEl.textContent = 'G 1';
+      } else if (speedKmh < 52) {
+        gearEl.textContent = 'G 2';
+      } else if (speedKmh < 85) {
+        gearEl.textContent = 'G 3';
+      } else if (speedKmh < 125) {
+        gearEl.textContent = 'G 4';
+      } else {
+        gearEl.textContent = 'G 5';
+      }
+    }
+
+    // F1 Steering Wheel Rev / Shift LED lights (7 LEDs)
+    const ledThresholds = [0.12, 0.28, 0.44, 0.60, 0.74, 0.86, 0.95];
+    const ledClasses = ['lit-green', 'lit-green', 'lit-yellow', 'lit-yellow', 'lit-red', 'lit-red', 'lit-purple'];
+    for (let i = 0; i < 7; i++) {
+      const led = document.querySelector(`.rev-led[data-led="${i}"]`);
+      if (led) {
+        if (speedRatio >= ledThresholds[i]) {
+          led.classList.add(ledClasses[i]);
+        } else {
+          led.classList.remove(ledClasses[i]);
+        }
+      }
+    }
+
+    // Current Lap & Lap Time
+    const lapEl = document.getElementById('hud-lap');
+    if (lapEl) {
+      lapEl.innerHTML = `${Math.min(this.raceManager.currentLap, 3)} <span style="font-size: 14px; color: var(--ink-blue-light);">/ 3</span>`;
+    }
+    const timeEl = document.getElementById('hud-time');
+    if (timeEl) {
+      timeEl.innerText = this.raceManager.formatTime(this.raceManager.currentLapTime);
+    }
+
+    // Drift / Grip Indicator Status
     const driftEl = document.getElementById('hud-drift');
-    if (physResult.isDrifting) {
-      driftEl.innerText = `DRIFT: ${Math.round(physResult.slipRatio * 100)}%`;
-      driftEl.style.color = 'var(--ink-crimson)';
-    } else {
-      driftEl.innerText = 'GRIP: MAX';
-      driftEl.style.color = 'var(--ink-sage)';
+    if (driftEl) {
+      if (physResult.isDrifting) {
+        driftEl.textContent = `DRIFT: ${Math.round(physResult.slipRatio * 100)}%`;
+        driftEl.style.fill = 'var(--ink-crimson)';
+      } else {
+        driftEl.textContent = 'GRIP: MAX';
+        driftEl.style.fill = 'var(--ink-sage)';
+      }
     }
 
     // 12. Render Frame

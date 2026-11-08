@@ -76,22 +76,88 @@
 
   <!-- In-Race Telemetry HUD (Speed, Lap, Lap Time) -->
   <div id="hud-overlay">
-    <div class="hud-panel">
-      <div class="hud-label">POSITION</div>
-      <div class="hud-value" id="hud-position">P1 <span style="font-size: 14px; color: var(--ink-blue-light);">/ 4</span></div>
-      <div class="hud-sub" id="hud-status">RACING</div>
+    <!-- Left Bottom Telemetry Stack: Lap box placed directly above Position box -->
+    <div class="hud-left-stack">
+      <!-- Current Lap Panel (Above Position) -->
+      <div class="hud-panel" id="panel-lap">
+        <div class="hud-label">CURRENT LAP</div>
+        <div class="hud-value" id="hud-lap">1 <span style="font-size: 14px; color: var(--ink-blue-light);">/ 3</span></div>
+        <div class="hud-sub" id="hud-time">00:00.00</div>
+      </div>
+
+      <!-- Position Panel (Below Lap) -->
+      <div class="hud-panel" id="panel-position">
+        <div class="hud-label">POSITION</div>
+        <div class="hud-value" id="hud-position">P1 <span style="font-size: 14px; color: var(--ink-blue-light);">/ 4</span></div>
+        <div class="hud-sub" id="hud-status">RACING</div>
+      </div>
     </div>
 
-    <div class="hud-panel" style="min-width: 140px; text-align: center;">
-      <div class="hud-label">CURRENT LAP</div>
-      <div class="hud-value" id="hud-lap">1 <span style="font-size: 14px; color: var(--ink-blue-light);">/ 3</span></div>
-      <div class="hud-sub" id="hud-time">00:00.00</div>
-    </div>
+    <!-- Circular F1 Analog Speedometer Dial -->
+    <div id="f1-speedo-dial" class="f1-dial-container" title="F1 Analog Speedometer">
+      <svg class="f1-dial-svg" viewBox="0 0 160 160">
+        <!-- Outer dial casing -->
+        <circle cx="80" cy="80" r="76" class="dial-casing" />
+        <circle cx="80" cy="80" r="72" class="dial-track" />
 
-    <div class="hud-panel" style="text-align: right; min-width: 120px;">
-      <div class="hud-label">VELOCITY</div>
-      <div class="hud-value" id="hud-speed">0 <span style="font-size: 14px;">KM/H</span></div>
-      <div class="hud-sub" id="hud-drift">GRIP: MAX</div>
+        <!-- F1 Top Rev / Shift LED lights arc (7 LEDs: green, green, yellow, yellow, red, red, purple) -->
+        <g id="dial-rev-lights">
+          <circle cx="48" cy="27" r="3.2" class="rev-led" data-led="0" />
+          <circle cx="58" cy="22" r="3.2" class="rev-led" data-led="1" />
+          <circle cx="69" cy="19" r="3.2" class="rev-led" data-led="2" />
+          <circle cx="80" cy="18" r="3.8" class="rev-led" data-led="3" />
+          <circle cx="91" cy="19" r="3.2" class="rev-led" data-led="4" />
+          <circle cx="102" cy="22" r="3.2" class="rev-led" data-led="5" />
+          <circle cx="112" cy="27" r="3.2" class="rev-led" data-led="6" />
+        </g>
+
+        <!-- Speedometer Dial Ticks & Scale Markings (-135deg to +135deg) -->
+        <g id="dial-ticks">
+          <!-- 0 km/h (-135deg) -->
+          <line x1="39" y1="121" x2="45" y2="115" class="dial-tick major" />
+          <text x="46" y="125" class="dial-tick-text">0</text>
+
+          <!-- 40 km/h (-86deg) -->
+          <line x1="22" y1="76" x2="30" y2="76" class="dial-tick major" />
+          <text x="36" y="80" class="dial-tick-text">40</text>
+
+          <!-- 80 km/h (-37deg) -->
+          <line x1="34" y1="34" x2="41" y2="41" class="dial-tick major" />
+          <text x="49" y="49" class="dial-tick-text">80</text>
+
+          <!-- 120 km/h (+12deg) -->
+          <line x1="92" y1="23" x2="90" y2="31" class="dial-tick major" />
+          <text x="88" y="44" class="dial-tick-text">120</text>
+
+          <!-- 160 km/h (+61deg) -->
+          <line x1="130" y1="48" x2="123" y2="53" class="dial-tick major redline" />
+          <text x="114" y="62" class="dial-tick-text redline">160</text>
+
+          <!-- 200 km/h (+110deg) -->
+          <line x1="137" y1="99" x2="129" y2="96" class="dial-tick major redline" />
+          <text x="118" y="104" class="dial-tick-text redline">200</text>
+        </g>
+
+        <!-- Analog Sweeping Needle (pivot at center 80, 80) -->
+        <g id="dial-needle-group" style="transform-origin: 80px 80px; transform: rotate(-135deg); transition: transform 0.05s ease-out;">
+          <polygon points="78.5,80 79.5,22 80.5,22 81.5,80 80,95" class="dial-needle" />
+          <circle cx="80" cy="80" r="7" class="dial-needle-hub" />
+          <circle cx="80" cy="80" r="3" class="dial-needle-pin" />
+        </g>
+
+        <!-- Digital Center Speed Display -->
+        <text x="80" y="73" text-anchor="middle" id="dial-speed-value" class="dial-digital-speed">0</text>
+        <text x="80" y="84" text-anchor="middle" class="dial-digital-unit">KM/H</text>
+
+        <!-- Dynamic Gear Indicator Box (e.g. G 1, G 2, G 3, G 4, G 5, R) -->
+        <rect x="67" y="93" width="26" height="15" rx="2" class="dial-gear-pill" />
+        <text x="80" y="104" text-anchor="middle" id="dial-gear-label" class="dial-gear-text">G 1</text>
+
+        <!-- Grip / Drift Indicator Pill at Base of Dial -->
+        <text x="80" y="125" text-anchor="middle" id="hud-drift" class="dial-drift-status">GRIP: MAX</text>
+      </svg>
+      <!-- Hidden legacy span to ensure any external or direct script reference never fails -->
+      <span id="hud-speed" style="display: none;">0 KM/H</span>
     </div>
   </div>
 

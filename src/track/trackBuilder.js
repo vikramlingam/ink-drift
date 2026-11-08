@@ -177,8 +177,15 @@ function buildBarriers(trackGroup, segments, halfWidth, isNight) {
 
 function buildBoostPads(trackGroup, isNight) {
   const boostPads = [];
-  const boostChevronMat = createSketchFillMaterial({ color: isNight ? 0x38BDF8 : 0x1A365D, jitter: 0.02 });
-  const boostBaseMat = createSketchFillMaterial({ color: isNight ? 0x1E3A5F : 0xFAEDCD, jitter: 0.015 });
+  const boostChevronMat = new THREE.MeshBasicMaterial({
+    color: isNight ? 0x38BDF8 : 0x102A43,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  });
+  const boostBaseMat = createSketchFillMaterial({
+    color: isNight ? 0x0E2A47 : 0xFDE047,
+    jitter: 0.015
+  });
   const outlineColor = isNight ? 0xBAE6FD : 0x102A43;
 
   BOOST_PAD_PARAMS.forEach((u, index) => {
@@ -190,30 +197,62 @@ function buildBoostPads(trackGroup, isNight) {
     padGroup.position.y = 0.04;
     padGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tangent);
 
-    const baseGeo = new THREE.PlaneGeometry(TRACK_WIDTH * 0.75, 4.5);
+    // 1. Base rectangle
+    const padLength = 5.2;
+    const padWidth = TRACK_WIDTH * 0.76;
+    const baseGeo = new THREE.PlaneGeometry(padWidth, padLength);
     baseGeo.rotateX(-Math.PI / 2);
     const baseMesh = new THREE.Mesh(baseGeo, boostBaseMat);
-    attachOutline(baseMesh, { color: outlineColor, thickness: 0.03 });
+    attachOutline(baseMesh, { color: outlineColor, thickness: 0.035 });
     padGroup.add(baseMesh);
 
-    for (let c = -1; c <= 1; c++) {
+    // 2. Lateral hatched speed lines at entry and exit
+    [-padLength * 0.44, padLength * 0.44].forEach(z => {
+      const stripePts = [
+        new THREE.Vector3(-padWidth * 0.48, 0.015, z),
+        new THREE.Vector3(padWidth * 0.48, 0.015, z)
+      ];
+      const stripeGeo = new THREE.BufferGeometry().setFromPoints(stripePts);
+      const stripeMat = new THREE.LineBasicMaterial({
+        color: outlineColor,
+        linewidth: 2
+      });
+      padGroup.add(new THREE.Line(stripeGeo, stripeMat));
+    });
+
+    // 3. Side guide ticks
+    [-padWidth * 0.46, padWidth * 0.46].forEach(x => {
+      for (let tz = -padLength * 0.4; tz <= padLength * 0.4; tz += 0.8) {
+        const tickPts = [
+          new THREE.Vector3(x, 0.015, tz),
+          new THREE.Vector3(x + (x > 0 ? -0.3 : 0.3), 0.015, tz)
+        ];
+        const tickGeo = new THREE.BufferGeometry().setFromPoints(tickPts);
+        const tickMat = new THREE.LineBasicMaterial({ color: outlineColor });
+        padGroup.add(new THREE.Line(tickGeo, tickMat));
+      }
+    });
+
+    // 4. Three crisp forward directional chevrons (>>>) pointing in track direction (+Z)
+    [-1.3, 0.0, 1.3].forEach(c => {
       const chevronShape = new THREE.Shape();
-      chevronShape.moveTo(-3.0, -0.6);
-      chevronShape.lineTo(0, 0.6);
-      chevronShape.lineTo(3.0, -0.6);
-      chevronShape.lineTo(2.2, -0.6);
-      chevronShape.lineTo(0, 0.2);
-      chevronShape.lineTo(-2.2, -0.6);
+      // Tip at Y = -0.85 maps to Z = +0.85 (FORWARD along track)
+      chevronShape.moveTo(-2.4, 0.45);
+      chevronShape.lineTo(0.0, -0.85); // Front arrow point
+      chevronShape.lineTo(2.4, 0.45);
+      chevronShape.lineTo(1.8, 0.7);
+      chevronShape.lineTo(0.0, -0.45);
+      chevronShape.lineTo(-1.8, 0.7);
       chevronShape.closePath();
 
       const chevronGeo = new THREE.ShapeGeometry(chevronShape);
-      // rotateX(+PI/2) points chevron forward along +Z (tangent direction of track travel)
-      chevronGeo.rotateX(Math.PI / 2);
+      // rotateX(-PI/2) places plane on floor (normal points UP) and maps shape -Y to +Z
+      chevronGeo.rotateX(-Math.PI / 2);
       const chevronMesh = new THREE.Mesh(chevronGeo, boostChevronMat);
-      chevronMesh.position.set(0, 0.01, c * 1.2);
+      chevronMesh.position.set(0, 0.025, c);
       attachOutline(chevronMesh, { color: outlineColor, thickness: 0.02 });
       padGroup.add(chevronMesh);
-    }
+    });
 
     trackGroup.add(padGroup);
 

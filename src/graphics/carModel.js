@@ -64,10 +64,8 @@ export function createCarModel(colorIndex = 0, isLocal = false, bodyStyle = 0, d
   carGroup.add(tagSprite);
 
   // Night Mode Headlight Projectors
-  let headlights = null;
-  if (isNight) {
-    headlights = createHeadlightBeams(carGroup);
-  }
+  const headlights = createHeadlightBeams(carGroup);
+  headlights.visible = !!isNight;
 
   return {
     group: carGroup,
@@ -76,6 +74,9 @@ export function createCarModel(colorIndex = 0, isLocal = false, bodyStyle = 0, d
     palette,
     bodyStyle,
     headlights,
+    setHeadlights(visible) {
+      if (headlights) headlights.visible = !!visible;
+    },
     updateVisuals(steerAngle, speed, delta) {
       wheels.forEach(w => {
         if (w.isFront) {
@@ -287,32 +288,64 @@ function addStandardWheels(group, wheelMat, outlineOpts, wheels, xOffset = 1.15)
 function createHeadlightBeams(group) {
   const beamGroup = new THREE.Group();
 
-  // Forward trapezoid beam projecting ahead of the car (+Z direction)
-  const beamShape = new THREE.Shape();
-  beamShape.moveTo(-0.35, 0);
-  beamShape.lineTo(0.35, 0);
-  beamShape.lineTo(2.2, 16.0);
-  beamShape.lineTo(-2.2, 16.0);
-  beamShape.closePath();
+  // 1. Two glowing round projector lenses on the front of the car
+  const lensGeo = new THREE.CircleGeometry(0.22, 16);
+  const lensMat = new THREE.MeshBasicMaterial({
+    color: 0xE0F2FE,
+    side: THREE.DoubleSide
+  });
 
-  const beamGeo = new THREE.ShapeGeometry(beamShape);
-  // rotateX(+PI/2) projects shape along +Z (forward direction of the car)
-  beamGeo.rotateX(Math.PI / 2);
+  [-0.65, 0.65].forEach(x => {
+    const lens = new THREE.Mesh(lensGeo, lensMat);
+    lens.position.set(x, 0.45, 2.22);
+    beamGroup.add(lens);
+  });
 
+  // 2. Projected trapezoid light beams on the road plane (+Z direction ahead of car)
+  // Road surface is at Y = 0.02, beams at Y = 0.045
   const beamMat = new THREE.MeshBasicMaterial({
     color: 0x38BDF8,
     transparent: true,
-    opacity: 0.22,
+    opacity: 0.52,
     depthWrite: false,
-    depthTest: true,
+    side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending
   });
 
-  // Position at front bumper (z = 2.1)
-  [-0.65, 0.65].forEach(x => {
+  const rayMat = new THREE.LineBasicMaterial({
+    color: 0x7DD3FC,
+    transparent: true,
+    opacity: 0.70
+  });
+
+  // Each headlight projects a forward beam starting at Z = 2.1 and fanning out to Z = 22.0
+  [-0.65, 0.65].forEach(xCenter => {
+    const beamShape = new THREE.Shape();
+    // In 2D shape coords:
+    // Y goes from 0.0 to -20.0; when rotateX(-PI/2), Z = -Y => Z goes from 0.0 to +20.0 (FORWARD!)
+    beamShape.moveTo(-0.25, 0.0);
+    beamShape.lineTo(0.25, 0.0);
+    beamShape.lineTo(2.4, -20.0);
+    beamShape.lineTo(-2.4, -20.0);
+    beamShape.closePath();
+
+    const beamGeo = new THREE.ShapeGeometry(beamShape);
+    beamGeo.rotateX(-Math.PI / 2); // Places on floor with normal pointing UP
     const beamMesh = new THREE.Mesh(beamGeo, beamMat);
-    beamMesh.position.set(x, 0.038, 2.1);
+    beamMesh.position.set(xCenter, 0.045, 2.1);
     beamGroup.add(beamMesh);
+
+    // Architectural pen rays along outer beam edges
+    const rayPts1 = [
+      new THREE.Vector3(xCenter - 0.25, 0.048, 2.1),
+      new THREE.Vector3(xCenter - 2.4, 0.048, 22.1)
+    ];
+    const rayPts2 = [
+      new THREE.Vector3(xCenter + 0.25, 0.048, 2.1),
+      new THREE.Vector3(xCenter + 2.4, 0.048, 22.1)
+    ];
+    beamGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(rayPts1), rayMat));
+    beamGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(rayPts2), rayMat));
   });
 
   group.add(beamGroup);

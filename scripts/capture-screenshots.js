@@ -155,20 +155,13 @@ async function main() {
   console.log('[Game] Waiting for countdown...');
   await wait(4500);
 
-  // Accelerate car into turn for action shot
-  console.log('[Game] Driving car for action shot...');
+  // Accelerate car along straight towards the first boost pad
+  console.log('[Game] Driving car for action shot towards boost pad...');
   await client.eval(`
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyW', key: 'w' }));
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp', key: 'ArrowUp' }));
   `);
-  await wait(2200);
-
-  // Drift into the corner
-  await client.eval(`
-    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyD', key: 'd' }));
-    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowRight', key: 'ArrowRight' }));
-  `);
-  await wait(800);
+  await wait(1800);
 
   // 1. Capture Day Mode
   await client.captureScreenshot(path.join(SCREENSHOT_DIR, 'gameplay-day.png'));
@@ -177,8 +170,6 @@ async function main() {
   await client.eval(`
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyW', key: 'w' }));
     window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowUp', key: 'ArrowUp' }));
-    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyD', key: 'd' }));
-    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ArrowRight', key: 'ArrowRight' }));
   `);
 
   // 2. Switch to Night Mode
