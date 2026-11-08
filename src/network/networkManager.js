@@ -13,22 +13,32 @@ export class NetworkManager {
     this.isConnected = false;
   }
 
-  async initMultiplayer(skipLobby = false) {
+  async initMultiplayer(targetRoomCode = null) {
+    if (this.isConnected && (!targetRoomCode || targetRoomCode === this.roomCode)) {
+      return true;
+    }
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const roomParam = urlParams.get('room') || urlParams.get('r');
+      const roomParam = targetRoomCode || urlParams.get('room') || urlParams.get('r');
 
       await insertCoin({
-        skipLobby: skipLobby || Boolean(roomParam),
+        skipLobby: true,
         maxPlayersPerRoom: 6,
         allowGamepads: false,
-        roomCode: roomParam || undefined
+        roomCode: roomParam ? roomParam.toUpperCase() : undefined
       });
 
       this.roomCode = getRoomCode();
       this.isMultiplayer = true;
       this.isConnected = true;
       this.localPlayerState = myPlayer();
+
+      // Keep browser address bar in sync with active room code
+      if (this.roomCode) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('room', this.roomCode);
+        window.history.replaceState({}, '', url.toString());
+      }
 
       if (this.callbacks.onRoomConnected) {
         this.callbacks.onRoomConnected(this.roomCode, isHost());
@@ -37,7 +47,7 @@ export class NetworkManager {
       // Handle players joining
       onPlayerJoin((playerState) => {
         const id = playerState.id;
-        if (playerState === this.localPlayerState) {
+        if (this.localPlayerState && playerState.id === this.localPlayerState.id) {
           // Local player
           return;
         }
@@ -46,11 +56,11 @@ export class NetworkManager {
         const remoteData = {
           id,
           playerState,
-          profile: playerState.getProfile(),
+          profile: playerState.getProfile() || {},
           interpBuffer: [],
           lastPacketTime: performance.now(),
-          currentPos: new THREE.Vector3(),
-          targetPos: new THREE.Vector3(),
+          currentPos: new THREE.Vector3(0, 0.45, 0),
+          targetPos: new THREE.Vector3(0, 0.45, 0),
           currentHeading: 0,
           targetHeading: 0,
           speed: 0,
@@ -129,15 +139,22 @@ export class NetworkManager {
 
       // Add to snapshot interpolation buffer
       if (remote.lastPacket !== state) {
+        const isFirst = !remote.lastPacket;
         remote.lastPacket = state;
         remote.lastPacketTime = now;
-        remote.targetPos.set(state.x, 0, state.z);
+        remote.targetPos.set(state.x, 0.45, state.z);
         remote.targetHeading = state.y;
         remote.speed = Math.hypot(state.vx, state.vz);
         remote.isDrifting = Boolean(state.d);
         remote.lap = state.l;
         remote.checkpoint = state.c;
         remote.finished = Boolean(state.f);
+
+        // Immediate snap on first packet so car appears in position without lerp lag
+        if (isFirst) {
+          remote.currentPos.copy(remote.targetPos);
+          remote.currentHeading = remote.targetHeading;
+        }
       }
 
       // Smooth Hermite / Lerp interpolation towards targetPos

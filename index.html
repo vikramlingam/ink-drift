@@ -248,6 +248,45 @@
     </div>
   </div>
 
+  <!-- MULTIPLAYER MODAL -->
+  <div class="modal-overlay" id="multiplayer-modal">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title">🌐 REAL-TIME MULTIPLAYER</div>
+        <button class="modal-close-btn" id="btn-close-multiplayer">✕</button>
+      </div>
+
+      <div style="font-size: 13px; line-height: 1.5; color: var(--ink-blue); margin-bottom: 16px;">
+        Race in real-time against friends with serverless peer-to-peer synchronization and client-side drift physics.
+      </div>
+
+      <!-- Active Room Section -->
+      <div class="setting-section" id="mp-active-section" style="display: none;">
+        <div class="setting-section-title">ACTIVE ROOM CODE</div>
+        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px;">
+          <div style="font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--ink-crimson); letter-spacing: 0.1em; background: var(--paper-hover); padding: 8px 16px; border: 1.5px solid var(--ink-blue); flex: 1; text-align: center;" id="mp-current-room-text">----</div>
+          <button class="paper-btn active" id="btn-mp-copy-link" style="height: 44px; padding: 0 16px; font-weight: 700;">📋 COPY INVITE LINK</button>
+        </div>
+        <div style="font-size: 11px; color: var(--ink-blue-light); margin-bottom: 14px;">
+          Share this link or code with your friends on another device or tab to join the exact same race.
+        </div>
+      </div>
+
+      <!-- Create or Join Actions -->
+      <div class="setting-section">
+        <div class="setting-section-title">CREATE OR JOIN A RACE</div>
+        <button class="paper-btn active" id="btn-mp-create-new" style="width: 100%; margin-bottom: 14px; padding: 10px 14px; font-weight: 700;">
+          🏎️ CREATE NEW MULTIPLAYER ROOM
+        </button>
+
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="text" id="mp-input-code" placeholder="ENTER 4-8 DIGIT ROOM CODE" maxlength="8" style="flex: 1; height: 38px; text-transform: uppercase; font-family: var(--font-mono); font-weight: 700; padding: 0 10px; border: 1.5px solid var(--ink-blue); background: var(--paper-bg); color: var(--ink-blue);" />
+          <button class="paper-btn" id="btn-mp-join-code" style="height: 38px;">JOIN ROOM</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- SETTINGS MODAL -->
   <div class="modal-overlay" id="settings-modal">
     <div class="modal-card">

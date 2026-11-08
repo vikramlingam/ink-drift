@@ -414,34 +414,123 @@ class GameApp {
       this.setupBots();
     });
 
-    // Copy Invite Link
+    // Multiplayer Modal & Connections
+    const mpModal = document.getElementById('multiplayer-modal');
+    const btnCloseMp = document.getElementById('btn-close-multiplayer');
+    const mpActiveSection = document.getElementById('mp-active-section');
+    const mpRoomText = document.getElementById('mp-current-room-text');
+    const mpInputCode = document.getElementById('mp-input-code');
+    const btnMpCreate = document.getElementById('btn-mp-create-new');
+    const btnMpJoin = document.getElementById('btn-mp-join-code');
+    const btnMpCopy = document.getElementById('btn-mp-copy-link');
+    const btnJoinMultiplayer = document.getElementById('btn-join-multiplayer');
     const btnInvite = document.getElementById('btn-copy-invite');
-    btnInvite.addEventListener('click', () => {
-      const room = this.networkManager.roomCode || 'LOBBY';
+
+    const updateMpUI = () => {
+      if (this.networkManager.isConnected && this.networkManager.roomCode) {
+        btnJoinMultiplayer.innerText = `● ONLINE: ${this.networkManager.roomCode}`;
+        btnJoinMultiplayer.classList.add('active');
+        if (mpActiveSection) mpActiveSection.style.display = 'block';
+        if (mpRoomText) mpRoomText.textContent = this.networkManager.roomCode;
+      } else {
+        btnJoinMultiplayer.innerText = 'JOIN MULTIPLAYER';
+        btnJoinMultiplayer.classList.remove('active');
+        if (mpActiveSection) mpActiveSection.style.display = 'none';
+      }
+    };
+
+    const copyRoomInvite = (room) => {
       const url = `${window.location.origin}${window.location.pathname}?room=${room}`;
       navigator.clipboard.writeText(url).then(() => {
-        this.showToast('INVITE LINK COPIED TO CLIPBOARD');
+        this.showToast(`INVITE LINK COPIED (ROOM: ${room})`);
       }).catch(() => {
-        this.showToast(`ROOM CODE: ${room}`);
+        prompt('Copy this multiplayer invite link to share:', url);
       });
-    });
+    };
 
-    // Join Multiplayer
-    const btnJoinMultiplayer = document.getElementById('btn-join-multiplayer');
-    btnJoinMultiplayer.addEventListener('click', async () => {
-      btnJoinMultiplayer.innerText = 'CONNECTING...';
-      const success = await this.networkManager.initMultiplayer();
-      if (success) {
-        btnJoinMultiplayer.innerText = 'MULTIPLAYER ACTIVE';
-        btnJoinMultiplayer.classList.add('active');
-      } else {
-        btnJoinMultiplayer.innerText = 'OFFLINE MODE';
-      }
-    });
+    if (btnCloseMp) {
+      btnCloseMp.addEventListener('click', () => {
+        if (mpModal) mpModal.style.display = 'none';
+      });
+    }
 
+    if (btnJoinMultiplayer) {
+      btnJoinMultiplayer.addEventListener('click', () => {
+        updateMpUI();
+        if (mpModal) mpModal.style.display = 'flex';
+      });
+    }
+
+    if (btnMpCreate) {
+      btnMpCreate.addEventListener('click', async () => {
+        btnMpCreate.innerText = 'CREATING ROOM...';
+        const success = await this.networkManager.initMultiplayer();
+        btnMpCreate.innerText = '🏎️ CREATE NEW MULTIPLAYER ROOM';
+        if (success) {
+          updateMpUI();
+          copyRoomInvite(this.networkManager.roomCode);
+        } else {
+          this.showToast('FAILED TO CREATE MULTIPLAYER ROOM');
+        }
+      });
+    }
+
+    if (btnMpJoin) {
+      btnMpJoin.addEventListener('click', async () => {
+        const code = (mpInputCode.value || '').trim().toUpperCase();
+        if (!code) {
+          this.showToast('PLEASE ENTER A VALID ROOM CODE');
+          return;
+        }
+        btnMpJoin.innerText = 'JOINING...';
+        const success = await this.networkManager.initMultiplayer(code);
+        btnMpJoin.innerText = 'JOIN ROOM';
+        if (success) {
+          updateMpUI();
+          if (mpModal) mpModal.style.display = 'none';
+          this.showToast(`JOINED ROOM ${code}`);
+        } else {
+          this.showToast(`FAILED TO JOIN ROOM ${code}`);
+        }
+      });
+    }
+
+    if (btnMpCopy) {
+      btnMpCopy.addEventListener('click', () => {
+        if (this.networkManager.roomCode) {
+          copyRoomInvite(this.networkManager.roomCode);
+        }
+      });
+    }
+
+    // Top Bar "COPY INVITE" button
+    if (btnInvite) {
+      btnInvite.addEventListener('click', async () => {
+        if (!this.networkManager.isConnected) {
+          btnInvite.innerText = 'CREATING...';
+          const success = await this.networkManager.initMultiplayer();
+          btnInvite.innerText = 'COPY INVITE';
+          if (!success) {
+            this.showToast('OFFLINE: COULD NOT CONNECT');
+            return;
+          }
+          updateMpUI();
+        }
+        copyRoomInvite(this.networkManager.roomCode);
+      });
+    }
+
+    // Auto-join if URL has ?room=... or ?r=...
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('room') || urlParams.get('r')) {
-      this.networkManager.initMultiplayer(true);
+    const initialRoom = urlParams.get('room') || urlParams.get('r');
+    if (initialRoom) {
+      btnJoinMultiplayer.innerText = 'CONNECTING...';
+      this.networkManager.initMultiplayer(initialRoom).then(success => {
+        if (success) {
+          updateMpUI();
+          this.showToast(`JOINED MULTIPLAYER ROOM ${initialRoom.toUpperCase()}`);
+        }
+      });
     }
 
     // Race Again
