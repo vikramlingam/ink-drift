@@ -691,5 +691,5 @@ class GameApp {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  new GameApp();
+  window.gameApp = new GameApp();
 });
