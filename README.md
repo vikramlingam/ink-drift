@@ -3,6 +3,7 @@
 > A lightweight, highly optimized, real-time multiplayer isometric arcade racing game crafted with a distinct **"blue ballpoint pen sketch on lined/graph notebook paper"** aesthetic.
 > Runs smoothly in modern desktop and mobile web browsers at 60fps with zero external asset downloads.
 
+[![Play Online](https://img.shields.io/badge/PLAY%20ONLINE-LIVE%20DEMO-102A43?style=for-the-badge&logo=googlechrome&logoColor=FBF9F4)](https://vikramlingam.github.io/ink-drift/)
 [![GitHub Repo](https://img.shields.io/badge/GITHUB-vikramlingam%2Fink--drift-102A43?style=for-the-badge&logo=github)](https://github.com/vikramlingam/ink-drift)
 [![Tech Stack](https://img.shields.io/badge/TECH-THREE.JS%20%7C%20VITE%20%7C%20PLAYROOM-2D5A43?style=for-the-badge)](#tech-stack)
 [![Style](https://img.shields.io/badge/AESTHETIC-ARCHIVAL%20NOTEBOOK%20SKETCH-8B2635?style=for-the-badge)](#aesthetic--art-direction)
