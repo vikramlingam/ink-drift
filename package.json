@@ -1,0 +1,15 @@
+{
+  "name": "cargame",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "playroomkit": "^0.0.97",
+    "three": "^0.187.0",
+    "vite": "^8.3.6"
+  }
+}

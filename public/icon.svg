@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Notebook Cream Paper Background -->
+  <rect width="512" height="512" rx="96" fill="#FBF9F4"/>
+  
+  <!-- Subtle Grid Lines -->
+  <line x1="0" y1="128" x2="512" y2="128" stroke="#CAD5DE" stroke-width="2"/>
+  <line x1="0" y1="256" x2="512" y2="256" stroke="#CAD5DE" stroke-width="2"/>
+  <line x1="0" y1="384" x2="512" y2="384" stroke="#CAD5DE" stroke-width="2"/>
+  <line x1="128" y1="0" x2="128" y2="512" stroke="#CAD5DE" stroke-width="2"/>
+  <line x1="256" y1="0" x2="256" y2="512" stroke="#CAD5DE" stroke-width="2"/>
+  <line x1="384" y1="0" x2="384" y2="512" stroke="#CAD5DE" stroke-width="2"/>
+  
+  <!-- Vertical Crimson Margin Guide Line -->
+  <line x1="84" y1="0" x2="84" y2="512" stroke="#E26D68" stroke-width="4"/>
+  
+  <!-- Ballpoint Pen Drift Skidmarks -->
+  <path d="M140,360 Q210,340 260,280" fill="none" stroke="#2A5298" stroke-width="6" stroke-dasharray="8,6" opacity="0.6"/>
+  <path d="M165,395 Q235,375 285,315" fill="none" stroke="#2A5298" stroke-width="6" stroke-dasharray="8,6" opacity="0.6"/>
+
+  <!-- Low-Poly Racer (Ballpoint Pen Blue) -->
+  <g transform="translate(256, 256) rotate(-35) translate(-100, -180)">
+    <!-- Chassis -->
+    <polygon points="60,300 140,300 150,140 120,60 80,60 50,140" fill="#FAF8F3" stroke="#102A43" stroke-width="8" stroke-linejoin="round"/>
+    <!-- Cockpit Canopy -->
+    <polygon points="75,210 125,210 120,130 80,130" fill="#DFE7ED" stroke="#102A43" stroke-width="6"/>
+    <!-- Front Splitter Wing -->
+    <rect x="30" y="50" width="140" height="14" rx="4" fill="#2A5298" stroke="#102A43" stroke-width="6"/>
+    <!-- Rear Wing -->
+    <rect x="25" y="305" width="150" height="20" rx="4" fill="#2A5298" stroke="#102A43" stroke-width="6"/>
+    <!-- Wheels -->
+    <rect x="15" y="80" width="28" height="56" rx="6" fill="#102A43"/>
+    <rect x="157" y="80" width="28" height="56" rx="6" fill="#102A43"/>
+    <rect x="15" y="240" width="30" height="62" rx="6" fill="#102A43"/>
+    <rect x="155" y="240" width="30" height="62" rx="6" fill="#102A43"/>
+  </g>
+
+  <!-- Golden Star Victory Accent -->
+  <polygon points="410,100 416,118 435,118 420,130 425,148 410,137 395,148 400,130 385,118 404,118" fill="#F59E0B" stroke="#92400E" stroke-width="3"/>
+</svg>
+

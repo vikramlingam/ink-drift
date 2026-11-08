@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>INK DRIFT // Real-Time Isometric Arcade Racer</title>
+  <meta name="theme-color" content="#FBF9F4" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <!-- 3D Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Top Ribbon: Lobby Room Pill & Action Controls -->
+  <div id="top-bar">
+    <div class="top-pill-group">
+      <div class="paper-pill" id="room-pill">
+        <span style="color: var(--ink-margin); font-weight: 700;">●</span>
+        <span>ROOM: <span id="room-code-display">SOLO_PRACTICE</span></span>
+      </div>
+      <button class="paper-btn" id="btn-copy-invite" title="Copy Room Invite Link">COPY INVITE</button>
+      <button class="paper-btn" id="btn-join-multiplayer" title="Start Multiplayer Lobby">JOIN MULTIPLAYER</button>
+      
+      <!-- Track Selector Dropdown -->
+      <select id="select-track" class="paper-select" title="Select Circuit">
+        <option value="0">01 // GRAND PRIX</option>
+        <option value="1">02 // OVAL SPEEDWAY</option>
+        <option value="2">03 // ALPINE PASS</option>
+        <option value="3">04 // INFINITY 8</option>
+        <option value="4">05 // TOKYO BAY</option>
+      </select>
+    </div>
+
+    <div class="top-pill-group">
+      <button class="paper-btn active" id="btn-toggle-difficulty" title="Toggle Driving Difficulty">DIFF: EASY</button>
+      <button class="paper-btn" id="btn-toggle-theme" title="Toggle Day / Night Mode">☀️ DAY</button>
+      <button class="paper-btn" id="btn-open-garage" title="Customise Car in Garage">🏎️ GARAGE</button>
+      <button class="paper-btn" id="btn-open-settings" title="Options & Function Settings">⚙️ SETTINGS</button>
+      <button class="paper-btn active" id="btn-toggle-bots" title="Toggle AI Opponents">BOTS: ON</button>
+      <button class="paper-btn active" id="btn-toggle-audio" title="Toggle Sound">AUDIO: ON</button>
+    </div>
+  </div>
+
+  <!-- Translucent Corner Minimap HUD -->
+  <div id="minimap-hud">
+    <div class="minimap-header">
+      <span id="minimap-track-name">01 // GRAND PRIX</span>
+      <span class="minimap-tag">LIVE GPS</span>
+    </div>
+    <canvas id="minimap-canvas" width="140" height="140"></canvas>
+  </div>
+
+  <!-- Blueprint Left Margin Stamp -->
+  <div id="margin-label">
+    ARCHIVAL DRAFT // NOTEBOOK CIRCUIT<br />
+    SCALE 1:100 // 12FPS LINE-BOIL KINEMATICS
+  </div>
+
+  <!-- Live Race Leaderboard -->
+  <div id="race-leaderboard">
+    <div class="leaderboard-title">
+      <span>POS / RACER</span>
+      <span>LAP</span>
+    </div>
+    <div id="leaderboard-rows">
+      <div class="leaderboard-row is-local">
+        <span>1. YOU (BLUE)</span>
+        <span>L1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- In-Race Telemetry HUD (Speed, Lap, Lap Time) -->
+  <div id="hud-overlay">
+    <div class="hud-panel">
+      <div class="hud-label">POSITION</div>
+      <div class="hud-value" id="hud-position">P1 <span style="font-size: 14px; color: var(--ink-blue-light);">/ 4</span></div>
+      <div class="hud-sub" id="hud-status">RACING</div>
+    </div>
+
+    <div class="hud-panel" style="min-width: 140px; text-align: center;">
+      <div class="hud-label">CURRENT LAP</div>
+      <div class="hud-value" id="hud-lap">1 <span style="font-size: 14px; color: var(--ink-blue-light);">/ 3</span></div>
+      <div class="hud-sub" id="hud-time">00:00.00</div>
+    </div>
+
+    <div class="hud-panel" style="text-align: right; min-width: 120px;">
+      <div class="hud-label">VELOCITY</div>
+      <div class="hud-value" id="hud-speed">0 <span style="font-size: 14px;">KM/H</span></div>
+      <div class="hud-sub" id="hud-drift">GRIP: MAX</div>
+    </div>
+  </div>
+
+  <!-- Center Announcement Stamp (3, 2, 1, GO!, READY) -->
+  <div id="center-stamp">
+    <div class="stamp-box" id="stamp-text">READY</div>
+  </div>
+
+  <!-- Desktop Keyboard Controls Hint -->
+  <div id="desktop-hint">
+    [W / ↑] ACCEL &nbsp;•&nbsp; [S / ↓] BRAKE/REV &nbsp;•&nbsp; [A/D / ←/→] STEER &nbsp;•&nbsp; [SPACE] DRIFT &nbsp;•&nbsp; [R] RESET
+  </div>
+
+  <!-- Mobile Multi-Touch Virtual Controls -->
+  <div id="mobile-controls">
+    <div id="stick-zone">
+      <div id="stick-nub"></div>
+    </div>
+    <div id="pedal-zone">
+      <div class="touch-pedal" id="btn-gas">GAS</div>
+      <div class="touch-pedal" id="btn-brake">BRAKE / DRIFT</div>
+    </div>
+  </div>
+
+  <!-- Confetti Canvas for 1st Place Celebration -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Post-Race Editorial Recap Card -->
+  <div id="recap-overlay">
+    <div class="recap-content-wrapper">
+      <!-- Golden Trophy Cup for 1st Place Victory -->
+      <div id="golden-trophy-container">
+        <svg class="golden-trophy-svg" viewBox="0 0 100 100" width="96" height="96">
+          <defs>
+            <linearGradient id="gold-cup-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#FEF08A" />
+              <stop offset="35%" stop-color="#FBBF24" />
+              <stop offset="70%" stop-color="#F59E0B" />
+              <stop offset="100%" stop-color="#B45309" />
+            </linearGradient>
+            <linearGradient id="gold-rim-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#FDE047" />
+              <stop offset="50%" stop-color="#FFFFFF" />
+              <stop offset="100%" stop-color="#EAB308" />
+            </linearGradient>
+          </defs>
+          <!-- Handles -->
+          <path d="M26,24 C8,24 8,52 28,54" fill="none" stroke="url(#gold-cup-grad)" stroke-width="5" stroke-linecap="round" />
+          <path d="M74,24 C92,24 92,52 72,54" fill="none" stroke="url(#gold-cup-grad)" stroke-width="5" stroke-linecap="round" />
+          <!-- Handles Inner Ink Border -->
+          <path d="M26,24 C8,24 8,52 28,54" fill="none" stroke="#102A43" stroke-width="1.5" stroke-linecap="round" />
+          <path d="M74,24 C92,24 92,52 72,54" fill="none" stroke="#102A43" stroke-width="1.5" stroke-linecap="round" />
+          <!-- Cup Main Bowl -->
+          <path d="M26,18 L74,18 L68,58 C65,72 35,72 32,58 Z" fill="url(#gold-cup-grad)" stroke="#102A43" stroke-width="2" />
+          <!-- Cup Rim -->
+          <ellipse cx="50" cy="18" rx="24" ry="4.5" fill="url(#gold-rim-grad)" stroke="#102A43" stroke-width="2" />
+          <!-- Stem Pillar -->
+          <path d="M44,66 L56,66 L54,80 L46,80 Z" fill="url(#gold-cup-grad)" stroke="#102A43" stroke-width="2" />
+          <!-- Base Pedestal -->
+          <path d="M30,80 L70,80 L75,92 L25,92 Z" fill="url(#gold-cup-grad)" stroke="#102A43" stroke-width="2" />
+          <!-- Star Victory Badge -->
+          <polygon points="50,32 53,41 62,41 55,46 57,55 50,49 43,55 45,46 38,41 47,41" fill="#FFFFFF" stroke="#102A43" stroke-width="1.5" />
+        </svg>
+        <div class="trophy-badge">🏆 1ST PLACE CHAMPION 🏆</div>
+      </div>
+
+      <div class="recap-card">
+        <div class="recap-header">
+          <div class="recap-title">OFFICIAL RACE LOG</div>
+          <div class="recap-stamp" id="recap-position-stamp">1ST PLACE</div>
+        </div>
+        <div class="recap-grid">
+          <div class="recap-item">
+            <div class="recap-item-label">TOTAL TIME</div>
+            <div class="recap-item-val" id="recap-total-time">01:12.45</div>
+          </div>
+          <div class="recap-item">
+            <div class="recap-item-label">FASTEST LAP</div>
+            <div class="recap-item-val" id="recap-best-lap">00:23.82</div>
+          </div>
+        </div>
+        <div class="recap-laps" id="recap-lap-list"></div>
+        <div class="recap-actions">
+          <button class="paper-btn active" id="btn-race-again" style="flex: 1; padding: 10px;">RACE AGAIN</button>
+          <button class="paper-btn" id="btn-copy-stats" style="padding: 10px;">COPY STATS</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ FUNCTION & CONTROL SETTINGS</div>
+        <button class="modal-close-btn" id="btn-close-settings">✕</button>
+      </div>
+
+      <div id="rebind-prompt">Press any keyboard key for binding...</div>
+
+      <!-- Steering Control Options -->
+      <div class="setting-section">
+        <div class="setting-section-title">STEERING & DRIVING BEHAVIOR</div>
+        <div class="setting-row">
+          <span>Driving Difficulty</span>
+          <select id="setting-difficulty" class="paper-select">
+            <option value="easy">Easy (Assisted Grip & Auto-Stabilize)</option>
+            <option value="medium">Medium (Balanced Arcade)</option>
+            <option value="hard">Hard (Pro Drift Challenge)</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <span>Invert Steering (Left/Right)</span>
+          <button class="paper-btn" id="setting-invert-steer">NORMAL (DRIVER VIEW)</button>
+        </div>
+        <div class="setting-row">
+          <span>Steering Sensitivity (<span id="setting-steer-sens-val">100%</span>)</span>
+          <input type="range" id="setting-steer-sens" min="0.5" max="2.0" step="0.1" value="1.0" style="width: 140px; cursor: pointer;" />
+        </div>
+      </div>
+
+      <!-- Keybindings Setup -->
+      <div class="setting-section">
+        <div class="setting-section-title">KEYBOARD CONTROLS CONFIGURATION</div>
+        <div class="keybind-grid">
+          <div class="setting-row">
+            <span>Throttle</span>
+            <button class="paper-btn keybind-btn" id="bind-throttle">W</button>
+          </div>
+          <div class="setting-row">
+            <span>Brake / Rev</span>
+            <button class="paper-btn keybind-btn" id="bind-brake">S</button>
+          </div>
+          <div class="setting-row">
+            <span>Steer Left</span>
+            <button class="paper-btn keybind-btn" id="bind-steer-left">A</button>
+          </div>
+          <div class="setting-row">
+            <span>Steer Right</span>
+            <button class="paper-btn keybind-btn" id="bind-steer-right">D</button>
+          </div>
+          <div class="setting-row">
+            <span>Handbrake Drift</span>
+            <button class="paper-btn keybind-btn" id="bind-handbrake">Space</button>
+          </div>
+          <div class="setting-row">
+            <span>Reset Track</span>
+            <button class="paper-btn keybind-btn" id="bind-reset">R</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Display & Visuals -->
+      <div class="setting-section">
+        <div class="setting-section-title">VIEWPORT & THEME</div>
+        <div class="setting-row">
+          <span>Camera Distance</span>
+          <select id="setting-camera-preset" class="paper-select">
+            <option value="close">Close-Up View</option>
+            <option value="standard" selected>Standard Isometric</option>
+            <option value="far">Panoramic Far</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <span>Visual Theme</span>
+          <select id="setting-theme" class="paper-select">
+            <option value="day">Notebook Paper (Day)</option>
+            <option value="night">Blueprint Cyanotype (Night)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Audio Volume Settings -->
+      <div class="setting-section">
+        <div class="setting-section-title">AUDIO & SOUND EFFECTS</div>
+        <div class="setting-row">
+          <span>Master Volume (<span id="setting-volume-val">80%</span>)</span>
+          <input type="range" id="setting-master-volume" min="0.0" max="1.0" step="0.05" value="0.8" style="width: 140px; cursor: pointer;" />
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button class="paper-btn active" id="btn-save-settings" style="flex: 1; padding: 10px;">SAVE SETTINGS</button>
+        <button class="paper-btn" id="btn-reset-settings" style="padding: 10px;">RESET DEFAULTS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GARAGE MODAL -->
+  <div class="modal-overlay" id="garage-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">🏎️ ARCHIVAL INK GARAGE</div>
+        <button class="modal-close-btn" id="btn-close-garage">✕</button>
+      </div>
+
+      <!-- 3D Turntable Preview Canvas -->
+      <div id="garage-preview-canvas">
+        <div class="turntable-hint">DRAG TO ROTATE 360°</div>
+      </div>
+
+      <!-- Vehicle Body Styles -->
+      <div class="setting-section">
+        <div class="setting-section-title">SELECT CHASSIS SHAPE</div>
+        <div class="garage-style-grid" id="garage-style-buttons"></div>
+      </div>
+
+      <!-- Performance Specs -->
+      <div class="specs-container">
+        <div class="spec-bar-row">
+          <span class="spec-bar-label">TOP SPEED</span>
+          <div class="spec-bar-track"><div class="spec-bar-fill" id="spec-speed" style="width: 80%;"></div></div>
+        </div>
+        <div class="spec-bar-row">
+          <span class="spec-bar-label">ACCELERATION</span>
+          <div class="spec-bar-track"><div class="spec-bar-fill" id="spec-accel" style="width: 85%;"></div></div>
+        </div>
+        <div class="spec-bar-row">
+          <span class="spec-bar-label">DRIFT GRIP</span>
+          <div class="spec-bar-track"><div class="spec-bar-fill" id="spec-grip" style="width: 90%;"></div></div>
+        </div>
+      </div>
+
+      <!-- Ink Color Palette -->
+      <div class="setting-section">
+        <div class="setting-section-title">ARCHIVAL INK PALETTE</div>
+        <div class="swatch-grid" id="garage-color-swatches"></div>
+      </div>
+
+      <!-- Decal Number -->
+      <div class="setting-section">
+        <div class="setting-row">
+          <span>Decal Number Tag</span>
+          <input type="text" id="garage-decal-input" maxlength="3" value="01" class="paper-select" style="width: 60px; text-align: center; font-size: 14px; font-weight: 700;" />
+        </div>
+      </div>
+
+      <button class="paper-btn active" id="btn-save-garage" style="width: 100%; padding: 12px; margin-top: 10px; font-size: 14px;">APPLY & RACE</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Pill -->
+  <div id="toast-notice">ROOM INVITE LINK COPIED TO CLIPBOARD</div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
